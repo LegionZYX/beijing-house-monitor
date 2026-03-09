@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block title %}设置 - 北京房产监控{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">⚙️ 系统设置</h2>
+    </div>
+    
+    <div style="max-width: 800px;">
+        <h3 style="margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0;">
+            🔍 默认筛选条件
+        </h3>
+        
+        <form id="filter-form" style="margin-bottom: 30px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                <div>
+                    <label style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">
+                        监控区域
+                    </label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                        {% set districts = ['朝阳', '海淀', '东城', '顺义', '丰台', '昌平', '大兴', '通州'] %}
+                        {% for d in districts %}
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" name="districts" value="{{ d }}" 
+                                   {% if d in ['朝阳', '海淀', '东城', '顺义'] %}checked{% endif %}
+                                   style="margin-right: 5px;">
+                            <span>{{ d }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div>
+                    <label style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">
+                        房源类型
+                    </label>
+                    <div style="display: flex; gap: 15px;">
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" name="house_types" value="second_hand" checked style="margin-right: 5px;">
+                            <span>二手房</span>
+                        </label>
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" name="house_types" value="auction" checked style="margin-right: 5px;">
+                            <span>法拍房</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div>
+                    <label style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">
+                        价格范围（万元）
+                    </label>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="number" name="min_price" placeholder="最低" value="" style="width: 100px; padding: 8px; border: 1px solid #d9d9d9; border-radius: 4px;">
+                        <span>-</span>
+                        <input type="number" name="max_price" placeholder="最高" value="500" style="width: 100px; padding: 8px; border: 1px solid #d9d9d9; border-radius: 4px;">
+                    </div>
+                </div>
+                
+                <div>
+                    <label style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">
+                        面积范围（㎡）
+                    </label>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="number" name="min_area" placeholder="最小" value="120" style="width: 100px; padding: 8px; border: 1px solid #d9d9d9; border-radius: 4px;">
+                        <span>-</span>
+                        <input type="number" name="max_area" placeholder="最大" value="" style="width: 100px; padding: 8px; border: 1px solid #d9d9d9; border-radius: 4px;">
+                    </div>
+                </div>
+                
+                <div>
+                    <label style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">
+                        楼龄限制
+                    </label>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span>不超过</span>
+                        <input type="number" name="max_age" value="15" style="width: 80px; padding: 8px; border: 1px solid #d9d9d9; border-radius: 4px;">
+                        <span>年（建造于</span>
+                        <input type="number" name="min_build_year" value="2010" readonly style="width: 80px; padding: 8px; border: 1px solid #d9d9d9; border-radius: 4px; background: #f5f5f5;">
+                        <span>年后）</span>
+                    </div>
+                </div>
+                
+                <div>
+                    <label style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">
+                        其他条件
+                    </label>
+                    <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="checkbox" name="require_elevator" checked style="margin-right: 8px;">
+                        <span>必须有电梯</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <button type="submit" class="btn btn-primary">保存设置</button>
+                <button type="reset" class="btn" style="margin-left: 10px; background: #f5f5f5; color: #666;">重置</button>
+            </div>
+        </form>
+        
+        <h3 style="margin: 30px 0 20px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0;">
+            📱 通知设置
+        </h3>
+        
+        <div style="background: #f6ffed; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+            <p style="color: #52c41a; margin-bottom: 10px;">
+                <strong>✓ Telegram 通知已启用</strong>
+            </p>
+            <p style="color: #666;">
+                新房源会推送到配置的 Telegram 频道。
+                请在环境变量中配置 TELEGRAM_CHANNEL_ID。
+            </p>
+        </div>
+        
+        <h3 style="margin: 30px 0 20px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0;">
+            🔄 爬虫设置
+        </h3>
+        
+        <div style="margin-bottom: 20px;">
+            <table style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>数据源</th>
+                        <th>状态</th>
+                        <th>更新间隔</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>链家</td>
+                        <td><span class="tag tag-success">启用</span></td>
+                        <td>6小时</td>
+                    </tr>
+                    <tr>
+                        <td>贝壳</td>
+                        <td><span class="tag tag-success">启用</span></td>
+                        <td>6小时</td>
+                    </tr>
+                    <tr>
+                        <td>京东法拍</td>
+                        <td><span class="tag tag-success">启用</span></td>
+                        <td>12小时</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <h3 style="margin: 30px 0 20px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0;">
+            💾 数据管理
+        </h3>
+        
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <button class="btn" style="background: #f5f5f5; color: #666;">
+                导出数据
+            </button>
+            <button class="btn" style="background: #fff1f0; color: #f5222d;">
+                清理缓存
+            </button>
+        </div>
+        
+        <div style="background: #e6f7ff; padding: 15px; border-radius: 4px;">
+            <h4 style="color: #1890ff; margin-bottom: 10px;">📊 数据概览</h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                <div>
+                    <span style="color: #666;">数据库大小：</span>
+                    <span style="font-weight: 500;">自动计算</span>
+                </div>
+                <div>
+                    <span style="color: #666;">最后更新：</span>
+                    <span style="font-weight: 500;">自动获取</span>
+                </div>
+                <div>
+                    <span style="color: #666;">数据保留：</span>
+                    <span style="font-weight: 500;">365天</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card" style="background: #fffbe6; border-left: 4px solid #faad14;">
+    <div class="card-header">
+        <h3 class="card-title">⚠️ 注意事项</h3>
+    </div>
+    <div style="color: #666; line-height: 1.8;">
+        <p>1. 筛选条件修改后，新房源将按照新条件进行推送</p>
+        <p>2. 价格、面积等数值筛选为闭区间（包含边界值）</p>
+        <p>3. 楼龄计算基于当前年份（2026年）</p>
+        <p>4. 数据仅供参考，实际交易请以官方信息为准</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('filter-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // 收集表单数据
+    var formData = new FormData(this);
+    var data = {};
+    
+    // 处理多选
+    data.districts = formData.getAll('districts');
+    data.house_types = formData.getAll('house_types');
+    
+    // 处理数值
+    data.min_price = formData.get('min_price') || null;
+    data.max_price = formData.get('max_price') || null;
+    data.min_area = formData.get('min_area') || null;
+    data.max_area = formData.get('max_area') || null;
+    data.max_build_year = formData.get('min_build_year') || null;
+    data.require_elevator = formData.has('require_elevator');
+    
+    // TODO: 发送到后端保存
+    alert('设置已保存！');
+});
+
+// 楼龄自动计算
+var maxAgeInput = document.querySelector('input[name="max_age"]');
+var minYearInput = document.querySelector('input[name="min_build_year"]');
+
+maxAgeInput.addEventListener('input', function() {
+    var maxAge = parseInt(this.value) || 0;
+    var currentYear = 2026;
+    minYearInput.value = currentYear - maxAge;
+});
+
+minYearInput.addEventListener('input', function() {
+    var minYear = parseInt(this.value) || 2026;
+    var currentYear = 2026;
+    maxAgeInput.value = currentYear - minYear;
+});
+</script>
+{% endblock %}

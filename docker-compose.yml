@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  house-monitor:
+    build: .
+    container_name: beijing-house-monitor
+    volumes:
+      - ./data:/app/data
+      - ./config:/app/config
+      - ./logs:/app/logs
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHANNEL_ID=${TELEGRAM_CHANNEL_ID}
+      - TELEGRAM_ADMIN_ID=${TELEGRAM_ADMIN_ID}
+      - WEB_USERNAME=${WEB_USERNAME:-admin}
+      - WEB_PASSWORD=${WEB_PASSWORD:-admin}
+      - TZ=Asia/Shanghai
+    restart: unless-stopped
+    networks:
+      - house-network
+
+  web:
+    build: .
+    container_name: beijing-house-web
+    command: python web/app.py
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data
+      - ./config:/app/config
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHANNEL_ID=${TELEGRAM_CHANNEL_ID}
+      - TELEGRAM_ADMIN_ID=${TELEGRAM_ADMIN_ID}
+      - WEB_USERNAME=${WEB_USERNAME:-admin}
+      - WEB_PASSWORD=${WEB_PASSWORD:-admin}
+      - TZ=Asia/Shanghai
+    restart: unless-stopped
+    networks:
+      - house-network
+
+networks:
+  house-network:
+    driver: bridge

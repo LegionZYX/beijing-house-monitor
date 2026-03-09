@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}法拍房 - 北京房产监控{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">即将开拍</div>
+        <div class="stat-value" style="color: #fa541c;">{{ upcoming|length }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">进行中</div>
+        <div class="stat-value" style="color: #1890ff;">{{ ongoing|length }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">平均折扣</div>
+        <div class="stat-value" style="color: #52c41a;">
+            {% set total_discount = 0 %}
+            {% set count = 0 %}
+            {% for auction in upcoming %}
+                {% if auction.starting_price and auction.market_price %}
+                    {% set discount = (1 - auction.starting_price / auction.market_price) * 100 %}
+                    {% set total_discount = total_discount + discount %}
+                    {% set count = count + 1 %}
+                {% endif %}
+            {% endfor %}
+            {% if count > 0 %}{{ (total_discount / count)|int }}%{% else %}-{% endif %}
+        </div>
+    </div>
+</div>
+
+{% if upcoming %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">⏰ 即将开拍</h2>
+    </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>房源</th>
+                    <th>区域</th>
+                    <th>起拍价</th>
+                    <th>评估价</th>
+                    <th>折扣</th>
+                    <th>开拍时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for auction in upcoming %}
+                <tr>
+                    <td>
+                        <a href="/houses/{{ auction.id }}">{{ auction.title[:35] }}{% if auction.title|length > 35 %}...{% endif %}</a>
+                        {% if auction.area_size %}
+                        <br><small style="color: #666;">{{ auction.area_size|int }}㎡</small>
+                        {% endif %}
+                    </td>
+                    <td>{{ auction.district }}</td>
+                    <td>
+                        {% if auction.starting_price %}
+                        <span class="price">{{ auction.starting_price|int }}万</span>
+                        {% else %}-{% endif %}
+                    </td>
+                    <td>
+                        {% if auction.market_price %}{{ auction.market_price|int }}万{% else %}-{% endif %}
+                    </td>
+                    <td>
+                        {% if auction.starting_price and auction.market_price %}
+                        <span class="tag tag-success">
+                            {{ ((1 - auction.starting_price / auction.market_price) * 100)|int }}%折扣
+                        </span>
+                        {% else %}-{% endif %}
+                    </td>
+                    <td>
+                        {% if auction.auction_start_time %}
+                        <span class="countdown">{{ auction.auction_start_time[:16] }}</span>
+                        {% else %}-{% endif %}
+                    </td>
+                    <td>
+                        <a href="/houses/{{ auction.id }}" class="btn btn-link">详情</a>
+                        <a href="{{ auction.source_url }}" target="_blank" class="btn btn-primary">竞拍</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if ongoing %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">🔥 进行中</h2>
+    </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>房源</th>
+                    <th>区域</th>
+                    <th>起拍价</th>
+                    <th>当前价</th>
+                    <th>结束时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for auction in ongoing %}
+                <tr>
+                    <td>
+                        <a href="/houses/{{ auction.id }}">{{ auction.title[:35] }}{% if auction.title|length > 35 %}...{% endif %}</a>
+                    </td>
+                    <td>{{ auction.district }}</td>
+                    <td>
+                        {% if auction.starting_price %}{{ auction.starting_price|int }}万{% endif %}
+                    </td>
+                    <td>
+                        {% if auction.total_price %}
+                        <span class="price">{{ auction.total_price|int }}万</span>
+                        {% else %}-{% endif %}
+                    </td>
+                    <td>
+                        {% if auction.auction_end_time %}
+                        <span class="countdown">{{ auction.auction_end_time[:16] }}</span>
+                        {% else %}-{% endif %}
+                    </td>
+                    <td>
+                        <a href="/houses/{{ auction.id }}" class="btn btn-link">详情</a>
+                        <a href="{{ auction.source_url }}" target="_blank" class="btn btn-primary">参与</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if not upcoming and not ongoing %}
+<div class="card" style="text-align: center; padding: 60px;">
+    <p style="color: #999; font-size: 16px;">暂无法拍房数据</p>
+    <p style="color: #666; margin-top: 10px;">系统会定期更新法拍房信息</p>
+</div>
+{% endif %}
+
+<div class="card" style="background: #fffbe6; border-left: 4px solid #faad14;">
+    <div class="card-header">
+        <h3 class="card-title">⚠️ 法拍房风险提示</h3>
+    </div>
+    <div style="color: #666; line-height: 1.8;">
+        <p>1. 法拍房可能存在产权纠纷、欠费、占用等问题，请仔细调查</p>
+        <p>2. 竞拍前建议实地看房，了解房屋实际情况</p>
+        <p>3. 注意税费计算，法拍房税费可能较高</p>
+        <p>4. 确保资金来源合法，按时支付尾款</p>
+        <p>5. 本系统数据仅供参考，以法院公告为准</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 倒计时功能
+function updateCountdown() {
+    document.querySelectorAll('.countdown').forEach(function(el) {
+        var timeText = el.textContent;
+        // 这里可以添加实时倒计时逻辑
+    });
+}
+
+setInterval(updateCountdown, 60000);
+</script>
+{% endblock %}

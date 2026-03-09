@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}房源列表 - 北京房产监控{% endblock %}
+
+{% block content %}
+<div class="filter-bar">
+    <div class="filter-group">
+        <span class="filter-label">区域:</span>
+        <select name="district" onchange="applyFilter('district', this.value)">
+            <option value="">全部</option>
+            <option value="朝阳" {% if '朝阳' in filters.getlist('district') %}selected{% endif %}>朝阳</option>
+            <option value="海淀" {% if '海淀' in filters.getlist('district') %}selected{% endif %}>海淀</option>
+            <option value="东城" {% if '东城' in filters.getlist('district') %}selected{% endif %}>东城</option>
+            <option value="西城" {% if '西城' in filters.getlist('district') %}selected{% endif %}>西城</option>
+            <option value="丰台" {% if '丰台' in filters.getlist('district') %}selected{% endif %}>丰台</option>
+            <option value="石景山" {% if '石景山' in filters.getlist('district') %}selected{% endif %}>石景山</option>
+            <option value="通州" {% if '通州' in filters.getlist('district') %}selected{% endif %}>通州</option>
+            <option value="昌平" {% if '昌平' in filters.getlist('district') %}selected{% endif %}>昌平</option>
+            <option value="大兴" {% if '大兴' in filters.getlist('district') %}selected{% endif %}>大兴</option>
+            <option value="顺义" {% if '顺义' in filters.getlist('district') %}selected{% endif %}>顺义</option>
+        </select>
+    </div>
+    
+    <div class="filter-group">
+        <span class="filter-label">类型:</span>
+        <select name="type" onchange="applyFilter('type', this.value)">
+            <option value="">全部</option>
+            <option value="second_hand" {% if 'second_hand' in filters.getlist('type') %}selected{% endif %}>二手房</option>
+            <option value="auction" {% if 'auction' in filters.getlist('type') %}selected{% endif %}>法拍房</option>
+        </select>
+    </div>
+    
+    <div class="filter-group">
+        <span class="filter-label">价格:</span>
+        <input type="number" name="min_price" placeholder="最低价" value="{{ filters.get('min_price', '') }}" style="width: 80px;">
+        <span>-</span>
+        <input type="number" name="max_price" placeholder="最高价" value="{{ filters.get('max_price', '') }}" style="width: 80px;">
+        <span>万</span>
+    </div>
+    
+    <div class="filter-group">
+        <span class="filter-label">面积:</span>
+        <input type="number" name="min_area" placeholder="最小" value="{{ filters.get('min_area', '') }}" style="width: 80px;">
+        <span>-</span>
+        <input type="number" name="max_area" placeholder="最大" value="{{ filters.get('max_area', '') }}" style="width: 80px;">
+        <span>㎡</span>
+    </div>
+    
+    <div class="filter-group">
+        <label>
+            <input type="checkbox" name="elevator" {% if filters.get('elevator') %}checked{% endif %}>
+            <span class="filter-label">有电梯</span>
+        </label>
+    </div>
+    
+    <button class="btn btn-primary" onclick="applyFilters()">筛选</button>
+    <a href="/houses" class="btn btn-link">重置</a>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">房源列表 (共 {{ total }} 套)</h2>
+    </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>房源</th>
+                    <th>区域</th>
+                    <th>小区</th>
+                    <th>面积/户型</th>
+                    <th>总价</th>
+                    <th>单价</th>
+                    <th>标签</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for house in houses %}
+                <tr>
+                    <td>
+                        <a href="/houses/{{ house.id }}">{{ house.title[:40] }}{% if house.title|length > 40 %}...{% endif %}</a>
+                        {% if house.house_type == 'auction' %}
+                        <span class="tag tag-auction">法拍</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ house.district }}</td>
+                    <td>{{ house.community_name or '-' }}</td>
+                    <td>
+                        {% if house.area_size %}{{ house.area_size|int }}㎡{% endif %}
+                        {% if house.rooms %}{{ house.rooms }}室{% endif %}{% if house.halls %}{{ house.halls }}厅{% endif %}
+                    </td>
+                    <td>
+                        {% if house.total_price %}
+                        <span class="price">{{ house.total_price|int }}万</span>
+                        {% else %}-{% endif %}
+                    </td>
+                    <td>
+                        {% if house.unit_price %}
+                        <span class="unit-price">{{ house.unit_price|int }}元/㎡</span>
+                        {% else %}-{% endif %}
+                    </td>
+                    <td>
+                        {% set tags = house.tags %}
+                        {% if tags is string %}
+                            {% set tags = tags|fromjson %}
+                        {% endif %}
+                        {% for tag in tags[:3] %}
+                        <span class="tag tag-primary">{{ tag }}</span>
+                        {% endfor %}
+                    </td>
+                    <td>
+                        <a href="/houses/{{ house.id }}" class="btn btn-link">详情</a>
+                        <a href="{{ house.source_url }}" target="_blank" class="btn btn-primary">查看</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 40px; color: #999;">
+                        暂无符合条件的房源
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    {% if total_pages > 1 %}
+    <div class="pagination">
+        {% if page > 1 %}
+        <a href="?page={{ page - 1 }}" class="page-link">上一页</a>
+        {% endif %}
+        
+        {% for p in range(1, total_pages + 1) %}
+            {% if p == page %}
+            <span class="page-link active">{{ p }}</span>
+            {% elif p <= 5 or p > total_pages - 2 or (p > page - 2 and p < page + 2) %}
+            <a href="?page={{ p }}" class="page-link">{{ p }}</a>
+            {% elif p == 6 or p == total_pages - 3 %}
+            <span>...</span>
+            {% endif %}
+        {% endfor %}
+        
+        {% if page < total_pages %}
+        <a href="?page={{ page + 1 }}" class="page-link">下一页</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function applyFilter(key, value) {
+    const url = new URL(window.location);
+    if (value) {
+        url.searchParams.set(key, value);
+    } else {
+        url.searchParams.delete(key);
+    }
+    window.location = url;
+}
+
+function applyFilters() {
+    const url = new URL(window.location);
+    
+    // 价格
+    const minPrice = document.querySelector('input[name="min_price"]').value;
+    const maxPrice = document.querySelector('input[name="max_price"]').value;
+    if (minPrice) url.searchParams.set('min_price', minPrice);
+    else url.searchParams.delete('min_price');
+    if (maxPrice) url.searchParams.set('max_price', maxPrice);
+    else url.searchParams.delete('max_price');
+    
+    // 面积
+    const minArea = document.querySelector('input[name="min_area"]').value;
+    const maxArea = document.querySelector('input[name="max_area"]').value;
+    if (minArea) url.searchParams.set('min_area', minArea);
+    else url.searchParams.delete('min_area');
+    if (maxArea) url.searchParams.set('max_area', maxArea);
+    else url.searchParams.delete('max_area');
+    
+    // 电梯
+    const elevator = document.querySelector('input[name="elevator"]').checked;
+    if (elevator) url.searchParams.set('elevator', '1');
+    else url.searchParams.delete('elevator');
+    
+    window.location = url;
+}
+</script>
+{% endblock %}

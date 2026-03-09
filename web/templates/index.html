@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}仪表盘 - 北京房产监控{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">总房源数</div>
+        <div class="stat-value">{{ stats.total_houses }}</div>
+        <div class="stat-change">持续监控中</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">今日新增</div>
+        <div class="stat-value">{{ recent_new }}</div>
+        <div class="stat-change">+{{ recent_new }} 套</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">法拍房</div>
+        <div class="stat-value">{{ stats.auction_count }}</div>
+        <div class="stat-change">含 {{ upcoming_auctions }} 套即将开拍</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">覆盖区域</div>
+        <div class="stat-value">{{ stats.district_distribution|length }}</div>
+        <div class="stat-change">个行政区</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">📍 区域分布</h2>
+    </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>区域</th>
+                    <th>房源数量</th>
+                    <th>占比</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for district, count in stats.district_distribution.items()|sort(reverse=true, attribute='1') %}
+                <tr>
+                    <td>{{ district }}</td>
+                    <td>{{ count }} 套</td>
+                    <td>{{ (count / stats.total_houses * 100)|round(1) }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if price_drops %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">📉 最近降价房源</h2>
+        <a href="/houses" class="btn btn-link">查看全部 →</a>
+    </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>房源</th>
+                    <th>区域</th>
+                    <th>面积</th>
+                    <th>价格</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for house in price_drops %}
+                <tr>
+                    <td>
+                        <a href="/houses/{{ house.id }}" class="btn btn-link">{{ house.title[:30] }}{% if house.title|length > 30 %}...{% endif %}</a>
+                        {% if house.house_type == 'auction' %}
+                        <span class="tag tag-auction">法拍</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ house.district }}</td>
+                    <td>{{ house.area_size|int }}㎡</td>
+                    <td>
+                        <span class="price">{{ house.total_price|int }}万</span>
+                    </td>
+                    <td>
+                        <a href="{{ house.source_url }}" target="_blank" class="btn btn-primary">查看</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">🔥 即将开始的法拍房</h2>
+        <a href="/auctions" class="btn btn-link">查看全部 →</a>
+    </div>
+    {% if upcoming_auctions > 0 %}
+    <p style="color: #666; padding: 20px;">有 {{ upcoming_auctions }} 套法拍房即将开拍，请及时关注！</p>
+    {% else %}
+    <p style="color: #999; padding: 20px;">暂无即将开始的法拍房</p>
+    {% endif %}
+</div>
+{% endblock %}

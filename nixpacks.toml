@@ -1,0 +1,10 @@
+# Railway 构建配置（备选方案）
+
+[phases.build]
+cmds = ["pip install -r requirements.txt"]
+
+[phases.setup]
+nixPkgs = ["python311", "gcc", "libxml2", "libxslt"]
+
+[start]
+cmd = "python src/scheduler.py & python web/app.py"

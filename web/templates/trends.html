@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}价格趋势 - 北京房产监控{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">📊 各区域价格对比</h2>
+    </div>
+    <div id="district-chart" style="height: 400px;"></div>
+    
+    <div class="table-container" style="margin-top: 20px;">
+        <table>
+            <thead>
+                <tr>
+                    <th>区域</th>
+                    <th>房源数</th>
+                    <th>平均总价</th>
+                    <th>平均单价</th>
+                    <th>价格区间</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for stat in district_stats %}
+                <tr>
+                    <td><strong>{{ stat.district }}</strong></td>
+                    <td>{{ stat.count }} 套</td>
+                    <td>{% if stat.avg_price %}{{ stat.avg_price|int }}万{% else %}-{% endif %}</td>
+                    <td>{% if stat.avg_unit_price %}{{ stat.avg_unit_price|int }}元/㎡{% else %}-{% endif %}</td>
+                    <td>{% if stat.min_price and stat.max_price %}{{ stat.min_price|int }}-{{ stat.max_price|int }}万{% else %}-{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">🏘️ 热门小区</h2>
+    </div>
+    <div id="community-chart" style="height: 400px;"></div>
+    
+    <div class="table-container" style="margin-top: 20px;">
+        <table>
+            <thead>
+                <tr>
+                    <th>小区</th>
+                    <th>区域</th>
+                    <th>挂牌数</th>
+                    <th>平均总价</th>
+                    <th>平均单价</th>
+                    <th>平均面积</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for comm in top_communities %}
+                <tr>
+                    <td><strong>{{ comm.community_name }}</strong></td>
+                    <td>{{ comm.district }}</td>
+                    <td>{{ comm.listing_count }} 套</td>
+                    <td>{% if comm.avg_price %}{{ comm.avg_price|int }}万{% else %}-{% endif %}</td>
+                    <td>{% if comm.avg_unit_price %}{{ comm.avg_unit_price|int }}元/㎡{% else %}-{% endif %}</td>
+                    <td>{% if comm.avg_area %}{{ comm.avg_area|int }}㎡{% else %}-{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">💡 市场分析</h2>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+        <div style="padding: 15px; background: #f6ffed; border-radius: 4px;">
+            <h4 style="color: #52c41a; margin-bottom: 10px;">📈 价格趋势</h4>
+            <p style="color: #666; line-height: 1.6;">
+                基于挂牌价格数据计算，反映市场供需关系。
+                建议关注价格变动幅度超过5%的小区。
+            </p>
+        </div>
+        <div style="padding: 15px; background: #e6f7ff; border-radius: 4px;">
+            <h4 style="color: #1890ff; margin-bottom: 10px;">🏘️ 小区热度</h4>
+            <p style="color: #666; line-height: 1.6;">
+                挂牌数量反映小区活跃度，挂牌越多说明流动性越好。
+                但同时也要关注成交周期。
+            </p>
+        </div>
+        <div style="padding: 15px; background: #fff2e8; border-radius: 4px;">
+            <h4 style="color: #fa541c; margin-bottom: 10px;">⚠️ 数据说明</h4>
+            <p style="color: #666; line-height: 1.6;">
+                价格数据来自挂牌价，实际成交价可能有所差异。
+                法拍房价格仅供参考，以法院公告为准。
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script>
+// 区域价格对比图表
+var districtData = [
+    {% for stat in district_stats %}
+    {
+        district: '{{ stat.district }}',
+        avgPrice: {{ stat.avg_price or 0 }},
+        avgUnitPrice: {{ stat.avg_unit_price or 0 }},
+        count: {{ stat.count }}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+];
+
+var trace1 = {
+    x: districtData.map(d => d.district),
+    y: districtData.map(d => d.avgPrice),
+    type: 'bar',
+    name: '平均总价（万）',
+    marker: {
+        color: '#1890ff'
+    }
+};
+
+var trace2 = {
+    x: districtData.map(d => d.district),
+    y: districtData.map(d => d.avgUnitPrice / 1000),
+    type: 'bar',
+    name: '平均单价（千元/㎡）',
+    marker: {
+        color: '#52c41a'
+    },
+    yaxis: 'y2'
+};
+
+var layout1 = {
+    barmode: 'group',
+    xaxis: {
+        title: '区域'
+    },
+    yaxis: {
+        title: '平均总价（万）'
+    },
+    yaxis2: {
+        title: '平均单价（千元/㎡）',
+        overlaying: 'y',
+        side: 'right'
+    },
+    margin: {
+        l: 50,
+        r: 50,
+        t: 30,
+        b: 50
+    }
+};
+
+Plotly.newPlot('district-chart', [trace1, trace2], layout1, {responsive: true});
+
+// 热门小区图表
+var communityData = [
+    {% for comm in top_communities[:10] %}
+    {
+        name: '{{ comm.community_name[:10] }}',
+        avgPrice: {{ comm.avg_price or 0 }},
+        listingCount: {{ comm.listing_count }}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+];
+
+var trace3 = {
+    x: communityData.map(c => c.name),
+    y: communityData.map(c => c.avgPrice),
+    type: 'bar',
+    name: '平均总价',
+    marker: {
+        color: '#fa8c16'
+    }
+};
+
+var layout2 = {
+    xaxis: {
+        title: '小区'
+    },
+    yaxis: {
+        title: '平均总价（万）'
+    },
+    margin: {
+        l: 50,
+        r: 20,
+        t: 30,
+        b: 100
+    }
+};
+
+Plotly.newPlot('community-chart', [trace3], layout2, {responsive: true});
+</script>
+{% endblock %}

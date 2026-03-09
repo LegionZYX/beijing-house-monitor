@@ -1,0 +1,80 @@
+# 北京房产监控系统配置
+
+# 系统配置
+system:
+  database_path: "data/houses.db"
+  log_level: "INFO"
+  timezone: "Asia/Shanghai"
+
+# 爬虫配置
+crawlers:
+  lianjia:
+    enabled: true
+    interval_hours: 6
+    max_pages: 3  # 每个区域爬取页数
+    districts:
+      - "朝阳"
+      - "海淀"
+      - "东城"
+      - "顺义"
+    
+  beike:
+    enabled: true
+    interval_hours: 6
+    max_pages: 3
+    districts:
+      - "朝阳"
+      - "海淀"
+      - "东城"
+      - "顺义"
+    
+  jd_auction:
+    enabled: true
+    interval_hours: 12
+    max_pages: 5
+
+# 通知配置
+notifications:
+  telegram:
+    enabled: true
+    bot_token: "${TELEGRAM_BOT_TOKEN}"  # 从环境变量读取
+    # 通知频道ID（用于推送房源通知）
+    # 获取方式：在Telegram中创建频道，添加Bot为管理员，然后转发一条频道消息给 @userinfobot 获取ID
+    notification_channel_id: "${TELEGRAM_CHANNEL_ID}"
+    # 管理员私聊ID（用于系统通知）
+    admin_chat_id: "${TELEGRAM_ADMIN_ID}"
+
+# Web 服务配置
+web:
+  enabled: true
+  host: "0.0.0.0"
+  port: 8080
+  auth:
+    enabled: true
+    username: "${WEB_USERNAME}"
+    password: "${WEB_PASSWORD}"
+
+# 默认筛选条件（新用户默认使用）
+default_filters:
+  districts: ["朝阳", "海淀", "东城", "顺义"]
+  house_types: ["second_hand", "auction"]
+  min_area: 120
+  max_price: 500
+  max_build_year: 2010  # 楼龄不超过15年
+  require_elevator: true
+
+# 价格监控配置
+price_monitor:
+  # 降价幅度阈值（百分比）
+  drop_threshold: 0.05
+  # 检查间隔（小时）
+  check_interval: 6
+
+# 数据保留策略
+retention:
+  # 已删除房源保留天数
+  deleted_house_days: 30
+  # 抓取日志保留天数
+  crawl_log_days: 90
+  # 价格历史保留天数
+  price_history_days: 365
