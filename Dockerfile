@@ -16,11 +16,16 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 复制代码
 COPY . .
 
-# 创建数据目录（Railway 使用卷挂载）
-RUN mkdir -p /app/data /app/logs
+# 创建数据目录并设置权限（Railway 使用卷挂载）
+RUN mkdir -p /app/data /app/logs && chmod 777 /app/data /app/logs
+
+# 设置环境变量
+ENV PORT=8080
+ENV PYTHONUNBUFFERED=1
+ENV DATABASE_PATH=/app/data/houses.db
 
 # 暴露端口
 EXPOSE 8080
 
-# 启动命令（支持 Railway 多进程）
-CMD python src/scheduler.py & python web/app.py
+# 启动应用
+CMD ["python", "railway_start.py"]

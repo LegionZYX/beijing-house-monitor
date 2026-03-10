@@ -16,7 +16,9 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
 
 # 初始化数据库
-db = Database(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'houses.db'))
+# Railway 使用环境变量 DATABASE_PATH，本地使用项目目录
+db_path = os.environ.get('DATABASE_PATH', os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'houses.db'))
+db = Database(db_path)
 
 # 基础认证
 def check_auth():
