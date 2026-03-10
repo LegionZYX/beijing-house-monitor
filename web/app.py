@@ -4,7 +4,7 @@ Web 仪表盘 - Flask 应用
 import os
 import sys
 from datetime import datetime, timedelta
-from flask import Flask, render_template, jsonify, request, abort
+from flask import Flask, render_template, jsonify, request, abort, Response
 
 # 添加项目根目录到路径
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -36,7 +36,12 @@ def require_auth():
     if request.endpoint in ['health', 'static']:
         return None
     if not check_auth():
-        return abort(401, 'Authentication required')
+        # 返回 401 并触发浏览器认证弹窗
+        return Response(
+            'Authentication required',
+            401,
+            {'WWW-Authenticate': 'Basic realm="Login Required"'}
+        )
 
 @app.route('/health')
 def health():
